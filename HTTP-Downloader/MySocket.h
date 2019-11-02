@@ -14,7 +14,7 @@ class MySocket
 	u_short port_{ htons(27015) }; // host port
 	sockaddr_in address_; // host address
 	int ConnectIP(PCWSTR IPaddress, int port);
-	int ConnectSocket();
+	int CreateSocket(int af, int type, int protocol);
 public:
 	MySocket(PCWSTR IPaddress, int port);
 	~MySocket();
@@ -23,18 +23,12 @@ public:
 
 MySocket::MySocket(PCWSTR IPaddress, int port)
 {
-	errorCode_ = WSAStartup(wVersionRequested_, &winSockData_); //Returns 0 if sucessful
-	// socket() creates a socket that is bound to a specific transport service provider.
+	errorCode_ = 0;
+	// CreateSocket creates a socket that is bound to a specific transport service provider.
 	// AF_INET - The Internet Protocol version 4 (IPv4) address family. 
 	// SOCK_STREAM - Uses TCP for AF_INET
 	// IPPROTO_TCP - The Transmission Control Protocol(TCP)
-	ConnectSocket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (errorCode_) WSACleanup();
-	else if (ConnectSocket_ == INVALID_SOCKET)
-	{
-		errorCode_ = WSAGetLastError();
-		WSACleanup();
-	}
+	errorCode_ = CreateSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	errorCode_ = ConnectIP(IPaddress, port);
 }
 
@@ -43,9 +37,18 @@ MySocket::~MySocket()
 	WSACleanup();
 }
 
-int MySocket::ConnectSocket()
+int MySocket::CreateSocket(int af, int type, int protocol)
 {
-	return 0;
+	int errorCode{ 0 };
+	errorCode = WSAStartup(wVersionRequested_, &winSockData_); //Returns 0 if sucessful
+	ConnectSocket_ = socket(af, type, protocol);
+	if (errorCode) WSACleanup();
+	else if (ConnectSocket_ == INVALID_SOCKET)
+	{
+		errorCode = WSAGetLastError();
+		WSACleanup();
+	}
+	return errorCode;
 }
 
 int MySocket::ConnectIP(PCWSTR IPaddress, int port)
