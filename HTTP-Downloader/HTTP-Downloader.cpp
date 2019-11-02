@@ -13,12 +13,12 @@
 int main()
 {
 	MySocket wsaSocket(__TEXT("192.168.8.1"), 80);
-	int errorcode = 0;
+	int errorcode{ 0 };
 
 	if (wsaSocket.GetErrorCode())
 		std::cout << "Winsocket did not start" << std::endl;
 	else 
 		std::cout << "Winsocket started" << std::endl;
-	std::cout << "Hello World!\n " << wsaSocket.GetErrorCode();
+	std::cout << "Error code: " << wsaSocket.GetErrorCode() << std::endl;
 }
 
