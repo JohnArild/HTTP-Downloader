@@ -17,13 +17,17 @@ class MySocket
 	bool isConnected_{ false };
 	char recvbuf[512]{ "" };
 
-	int ConnectIP(PCWSTR IPaddress, int port);
-	int CreateSocket(int af, int type, int protocol);
+	int MyConnectIP(PCWSTR IPaddress, int port);
+	int MyCreateSocket(int af, int type, int protocol);
+	int MyReceive(std::string& result);
+	int MyShutdown(std::string& result);
 public:
 	MySocket(PCWSTR IPaddress, int port);
 	~MySocket();
 	int GetErrorCode() { return errorCode_; }
 	int sendRequest(const std::string &sendString, std::string& result);
+	int MyConnect(PCWSTR IPaddress, int port);
+	int MyClose(std::string& result);
 };
 
 MySocket::MySocket(PCWSTR IPaddress, int port)
@@ -33,8 +37,8 @@ MySocket::MySocket(PCWSTR IPaddress, int port)
 	// AF_INET - The Internet Protocol version 4 (IPv4) address family. 
 	// SOCK_STREAM - Uses TCP for AF_INET
 	// IPPROTO_TCP - The Transmission Control Protocol(TCP)
-	errorCode_ = CreateSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	errorCode_ = ConnectIP(IPaddress, port);
+	errorCode_ = MyCreateSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	errorCode_ = MyConnectIP(IPaddress, port);
 }
 
 MySocket::~MySocket()
@@ -42,7 +46,7 @@ MySocket::~MySocket()
 	WSACleanup();
 }
 
-int MySocket::CreateSocket(int af, int type, int protocol)
+int MySocket::MyCreateSocket(int af, int type, int protocol)
 {
 	int errorCode{ 0 };
 	errorCode = WSAStartup(wVersionRequested_, &winSockData_); //Returns 0 if sucessful
@@ -56,7 +60,7 @@ int MySocket::CreateSocket(int af, int type, int protocol)
 	return errorCode;
 }
 
-int MySocket::ConnectIP(PCWSTR IPaddress, int port)
+int MySocket::MyConnectIP(PCWSTR IPaddress, int port)
 {
 	int errorCode{ 0 };
 	address_.sin_family = AF_INET;
@@ -74,8 +78,14 @@ int MySocket::ConnectIP(PCWSTR IPaddress, int port)
 
 int MySocket::sendRequest(const std::string &sendString, std::string &result)
 {
-	// Send an initial buffer
 	int iResult{ 0 };
+
+	if (!isConnected_)
+	{
+		result = "Not connected, last error message: " + std::to_string(errorCode_) + '\n';
+		return 1;
+	}
+	
 	iResult = send(ConnectSocket_, sendString.c_str(), (int)sendString.length(), 0);
 	if (iResult == SOCKET_ERROR) {
 		errorCode_ = WSAGetLastError();
@@ -85,5 +95,40 @@ int MySocket::sendRequest(const std::string &sendString, std::string &result)
 		return errorCode_;
 	}
 	result = "Bytes Sent: " + std::to_string(iResult) + '\n';
+
+	iResult = MyShutdown(result); // Shuts down connection since no more data is being sendt.
+
+	iResult = MyReceive(result); // Receive until the peer closes the connection
+	
+	return iResult;
+}
+
+int MySocket::MyReceive(std::string& result)
+{
+
+}
+
+int MySocket::MyShutdown(std::string& result)
+{
+	int iResult{ 0 };
+	iResult = shutdown(ConnectSocket_, SD_SEND);
+	if (iResult == SOCKET_ERROR) {
+		errorCode_ = WSAGetLastError();
+		result += "Shutdown failed with error: "  + std::to_string(errorCode_) + '\n';
+		closesocket(ConnectSocket_);
+		WSACleanup();
+		return 1;
+	}
+}
+
+int MySocket::MyConnect(PCWSTR IPaddress, int port)
+{
+	errorCode_ = 0;
+	errorCode_ = MyCreateSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	errorCode_ = MyConnectIP(IPaddress, port);
+}
+
+int MySocket::MyClose(std::string& result)
+{
 	return 0;
 }
