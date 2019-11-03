@@ -21,6 +21,7 @@ class MySocket
 	int MyCreateSocket(int af, int type, int protocol);
 	int MyReceive(std::string& result);
 	int MyShutdown(std::string& result);
+	int MySend(const std::string& sendString, std::string& result);
 public:
 	MySocket(PCWSTR IPaddress, int port);
 	~MySocket();
@@ -86,6 +87,21 @@ int MySocket::sendRequest(const std::string &sendString, std::string &result)
 		return 1;
 	}
 	
+	iResult = MySend(sendString, result); //Send message
+	if (iResult) return iResult;
+
+	iResult = MyShutdown(result); // Shuts down connection since no more data is being sendt.
+	if (iResult) return iResult;
+
+	iResult = MyReceive(result); // Receive until the peer closes the connection
+	if (iResult) return iResult;
+
+	return iResult;
+}
+
+int MySocket::MySend(const std::string& sendString, std::string& result)
+{
+	int iResult{ 0 };
 	iResult = send(ConnectSocket_, sendString.c_str(), (int)sendString.length(), 0);
 	if (iResult == SOCKET_ERROR) {
 		errorCode_ = WSAGetLastError();
@@ -95,17 +111,12 @@ int MySocket::sendRequest(const std::string &sendString, std::string &result)
 		return errorCode_;
 	}
 	result = "Bytes Sent: " + std::to_string(iResult) + '\n';
-
-	iResult = MyShutdown(result); // Shuts down connection since no more data is being sendt.
-
-	iResult = MyReceive(result); // Receive until the peer closes the connection
-	
-	return iResult;
+	return 0;
 }
 
 int MySocket::MyReceive(std::string& result)
 {
-
+	return 0;
 }
 
 int MySocket::MyShutdown(std::string& result)
@@ -117,8 +128,9 @@ int MySocket::MyShutdown(std::string& result)
 		result += "Shutdown failed with error: "  + std::to_string(errorCode_) + '\n';
 		closesocket(ConnectSocket_);
 		WSACleanup();
-		return 1;
+		return ConnectSocket_;
 	}
+	return 0;
 }
 
 int MySocket::MyConnect(PCWSTR IPaddress, int port)
@@ -126,6 +138,7 @@ int MySocket::MyConnect(PCWSTR IPaddress, int port)
 	errorCode_ = 0;
 	errorCode_ = MyCreateSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	errorCode_ = MyConnectIP(IPaddress, port);
+	return errorCode_;
 }
 
 int MySocket::MyClose(std::string& result)
