@@ -2,6 +2,7 @@
 
 #include <WinSock2.h>
 #include <ws2tcpip.h>
+#include <string>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -13,12 +14,16 @@ class MySocket
 	int errorCode_;
 	u_short port_{ htons(27015) }; // host port
 	sockaddr_in address_; // host address
+	bool isConnected_{ false };
+	char recvbuf[512]{ "" };
+
 	int ConnectIP(PCWSTR IPaddress, int port);
 	int CreateSocket(int af, int type, int protocol);
 public:
 	MySocket(PCWSTR IPaddress, int port);
 	~MySocket();
 	int GetErrorCode() { return errorCode_; }
+	int sendRequest(const std::string &sendString, std::string& result);
 };
 
 MySocket::MySocket(PCWSTR IPaddress, int port)
@@ -63,5 +68,22 @@ int MySocket::ConnectIP(PCWSTR IPaddress, int port)
 		closesocket(ConnectSocket_);
 		WSACleanup();
 	}
+	else isConnected_ = true;
 	return errorCode;
+}
+
+int MySocket::sendRequest(const std::string &sendString, std::string &result)
+{
+	// Send an initial buffer
+	int iResult{ 0 };
+	iResult = send(ConnectSocket_, sendString.c_str(), (int)sendString.length(), 0);
+	if (iResult == SOCKET_ERROR) {
+		errorCode_ = WSAGetLastError();
+		closesocket(ConnectSocket_);
+		WSACleanup();
+		result = "send failed with error: " + std::to_string(errorCode_) + '\n';
+		return errorCode_;
+	}
+	result = "Bytes Sent: " + std::to_string(iResult) + '\n';
+	return 0;
 }
