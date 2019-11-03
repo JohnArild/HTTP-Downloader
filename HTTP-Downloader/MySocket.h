@@ -4,6 +4,7 @@
 #include <ws2tcpip.h>
 #include <string>
 #include <list>
+#include <iostream>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -30,5 +31,6 @@ public:
 	int sendRequest(const std::string &sendString, std::string& result);
 	int MyConnect(PCWSTR IPaddress, int port);
 	int MyClose(std::string& result);
+	void printBuffer();
 };
 

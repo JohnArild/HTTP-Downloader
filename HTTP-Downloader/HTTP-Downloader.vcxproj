@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="HTTP-Downloader.cpp" />
+    <ClCompile Include="MySocket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MySocket.h" />

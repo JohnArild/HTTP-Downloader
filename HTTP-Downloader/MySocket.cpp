@@ -143,6 +143,13 @@ int MySocket::MyClose(std::string& result)
 		WSACleanup();
 		return 1;
 	}
-	result += "Socket closed." + '\n';
+	result += "Socket closed. \n";
 	return 0;
+}
+
+void MySocket::printBuffer()
+{
+	std::list<char>::iterator iter = receiveBuffer_.begin();
+	for (; iter != receiveBuffer_.end(); ++iter)
+		std::cout << *iter;
 }

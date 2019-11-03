@@ -12,7 +12,7 @@
 
 int main()
 {
-	MySocket wsaSocket(__TEXT("192.168.8.103"), 80);
+	MySocket wsaSocket(__TEXT("216.58.207.227"), 80);
 	int errorcode{ 0 };
 	std::string resultString;
 
@@ -26,7 +26,10 @@ int main()
 		std::cout << resultString;
 	}
 	std::cout << "Error code: " << wsaSocket.GetErrorCode() << std::endl;
+	std::cout << "Do you want to see the output? ";
 
-	
+	std::string answer{ "" };
+	std::cin >> answer;
+	if(answer == "yes" || answer == "y") wsaSocket.printBuffer();
 }
 
