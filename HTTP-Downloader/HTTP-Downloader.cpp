@@ -12,7 +12,7 @@
 
 int main()
 {
-	MySocket wsaSocket(__TEXT("192.168.8.1"), 80);
+	MySocket wsaSocket(__TEXT("192.168.8.103"), 80);
 	int errorcode{ 0 };
 	std::string resultString;
 

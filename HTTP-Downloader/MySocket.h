@@ -3,6 +3,7 @@
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 #include <string>
+#include <list>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -11,11 +12,11 @@ class MySocket
 	WSADATA winSockData_;
 	SOCKET ConnectSocket_;
 	WORD wVersionRequested_{ MAKEWORD(2, 2) }; // Winsock DLL version to use
-	int errorCode_;
-	u_short port_{ htons(27015) }; // host port
 	sockaddr_in address_; // host address
+
+	int errorCode_;
 	bool isConnected_{ false };
-	char recvbuf[512]{ "" };
+	std::list<char> receiveBuffer_;
 
 	int MyConnectIP(PCWSTR IPaddress, int port);
 	int MyCreateSocket(int af, int type, int protocol);
@@ -116,6 +117,28 @@ int MySocket::MySend(const std::string& sendString, std::string& result)
 
 int MySocket::MyReceive(std::string& result)
 {
+	const int recvbuflen = 512;
+	char recvbuf[recvbuflen]{ "" };
+	int iResult{ 0 };
+	int bytesRecived{ 0 };
+	do {
+
+		iResult = recv(ConnectSocket_, recvbuf, recvbuflen, 0);
+		if (iResult > 0)
+		{
+			for(int i = 0; i < recvbuflen; ++i)
+				receiveBuffer_.push_back(recvbuf[i]); //moving char buffer to list
+			bytesRecived += iResult;
+		}
+		else if (iResult == 0)
+			result += "Connection closed\n";
+		else
+		{
+			errorCode_ = WSAGetLastError();
+			result += "Receive failed with error code : " + std::to_string(errorCode_) + '\n';
+		}
+	} while (iResult > 0);
+	result += "Received : " + std::to_string(bytesRecived) + " bytes\n";
 	return 0;
 }
 
